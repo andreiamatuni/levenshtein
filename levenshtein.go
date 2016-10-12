@@ -28,7 +28,8 @@ type Weights struct {
 
 /*
 NewDMatrix returns a new distance matrix, given
-the dimensions as paramter
+the dimensions as paramter. All the memory is
+preallocated.
 */
 func NewDMatrix(x, y uint) [][]uint {
 	d := make([][]uint, x+1, x+1)
@@ -49,18 +50,6 @@ func PrintMatrix(d [][]uint) {
 	}
 }
 
-// preallocate memory for the d matrix and return it
-func createDMatrix(x, y []rune) [][]uint {
-	dx := len(x)
-	dy := len(y)
-	d := make([][]uint, dx+1, dx+1)
-
-	for i := range d {
-		d[i] = make([]uint, dy+1, dy+1)
-	}
-	return d
-}
-
 func min(x, y, z uint) uint {
 	min := x
 	if y < min {
@@ -78,7 +67,6 @@ between two strings provided as argument.
 */
 func EditDistance(x, y []rune, w Weights) uint {
 	d := NewDMatrix(uint(len(x)), uint(len(y)))
-	//d := createDMatrix(x, y)
 
 	for i := 0; i <= len(x); i++ {
 		d[i][0] = uint(i)

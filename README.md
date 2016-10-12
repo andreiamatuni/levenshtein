@@ -3,7 +3,8 @@
 Compute Levenshtein distance between strings using Wagner-Fischer algorithm.
 
 There are two main functions, EditDistance() and BufferedEditDistance. If you're going to be computing
-a lot of distances in a loop, you should use the buffered version. Here's the performance difference on my machine:
+a lot of distances in a loop, you should use the buffered version to avoid all the allocation/deallocation
+costs. Here's the performance difference on my machine. Each run is a 20 pair loop:
 
 ```
 
