@@ -2,19 +2,6 @@ package levenshtein
 
 import "fmt"
 
-// EditType is the type of edit being
-// made at a given step
-type EditType int
-
-const (
-	// Del is deletion
-	Del EditType = iota
-	// Subs is substitution
-	Subs
-	// Ins is insertion
-	Ins
-)
-
 /*
 Weights are the costs of making a particular edit.
 This struct functions as a configuration parameter
@@ -75,7 +62,6 @@ func EditDistance(x, y []rune, w Weights) uint {
 	for j := 0; j <= len(y); j++ {
 		d[0][j] = uint(j)
 	}
-
 	for i := 1; i <= len(x); i++ {
 		for j := 1; j <= len(y); j++ {
 			if x[i-1] == y[j-1] {
@@ -88,8 +74,64 @@ func EditDistance(x, y []rune, w Weights) uint {
 			}
 		}
 	}
-	//	PrintMatrix(d)
+	// PrintMatrix(d)
 	return d[len(x)][len(y)]
+}
+
+/*
+CompactEditDistance calculates distance with O(m)
+memory rather than O(mn).
+*/
+func CompactEditDistance(x, y []rune, w Weights) uint {
+	prevRow := make([]uint, len(y)+1, len(y)+1)
+	currRow := make([]uint, len(y)+1, len(y)+1)
+
+	for i := 0; i <= len(y); i++ {
+		prevRow[i] = uint(i)
+	}
+	for i := 1; i <= len(x); i++ {
+		currRow[0] = uint(i)
+		for j := 1; j <= len(y); j++ {
+			if x[i-1] == y[j-1] {
+				currRow[j] = prevRow[j-1]
+			} else {
+				currRow[j] = min(prevRow[j]+w.Delete,
+					currRow[j-1]+w.Insert,
+					prevRow[j-1]+w.Substitute,
+				)
+			}
+		}
+		copy(prevRow, currRow)
+	}
+	return currRow[len(y)]
+}
+
+/*
+BufferedCompactDist computes the distance using only
+two rows, rather than a whole distance matrix. These two
+rows are passed in as parameter, so the function itself does
+not allocate.
+*/
+func BufferedCompactDist(x, y []rune, w Weights, prevRow []uint, currRow []uint) uint {
+	for i := 0; i <= len(y); i++ {
+		prevRow[i] = uint(i)
+	}
+	for i := 1; i <= len(x); i++ {
+		currRow[0] = uint(i)
+		for j := 1; j <= len(y); j++ {
+
+			if x[i-1] == y[j-1] {
+				currRow[j] = prevRow[j-1]
+			} else {
+				currRow[j] = min(prevRow[j]+w.Delete,
+					currRow[j-1]+w.Insert,
+					prevRow[j-1]+w.Substitute,
+				)
+			}
+		}
+		copy(prevRow, currRow)
+	}
+	return currRow[len(y)]
 }
 
 /*
@@ -106,11 +148,9 @@ func BufferedEditDistance(x, y []rune, w Weights, d [][]uint) uint {
 	for i := 0; i <= len(x); i++ {
 		d[i][0] = uint(i)
 	}
-
 	for j := 0; j <= len(y); j++ {
 		d[0][j] = uint(j)
 	}
-
 	for i := 1; i <= len(x); i++ {
 		for j := 1; j <= len(y); j++ {
 			if x[i-1] == y[j-1] {
@@ -123,6 +163,5 @@ func BufferedEditDistance(x, y []rune, w Weights, d [][]uint) uint {
 			}
 		}
 	}
-	//	PrintMatrix(d)
 	return d[len(x)][len(y)]
 }
