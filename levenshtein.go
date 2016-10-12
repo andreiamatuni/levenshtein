@@ -77,7 +77,8 @@ package. It calculates the Levenshtein edit distance
 between two strings provided as argument.
 */
 func EditDistance(x, y []rune, w Weights) uint {
-	d := createDMatrix(x, y)
+	d := NewDMatrix(uint(len(x)), uint(len(y)))
+	//d := createDMatrix(x, y)
 
 	for i := 0; i <= len(x); i++ {
 		d[i][0] = uint(i)
@@ -114,7 +115,6 @@ Be sure to preallocate a buffer large enough to accomodate the
 size range of all the pairs whose edit distances you'll be computing
 */
 func BufferedEditDistance(x, y []rune, w Weights, d [][]uint) uint {
-
 	for i := 0; i <= len(x); i++ {
 		d[i][0] = uint(i)
 	}

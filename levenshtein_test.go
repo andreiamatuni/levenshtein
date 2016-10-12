@@ -1,9 +1,6 @@
 package levenshtein
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
 type WordPair struct {
 	x    []rune
@@ -11,6 +8,7 @@ type WordPair struct {
 	dist uint
 }
 
+// There are 20 pairs
 var pairs = []WordPair{
 	WordPair{[]rune("apple"), []rune("snapple"), 2},
 	WordPair{[]rune("book"), []rune("burn"), 3},
@@ -22,6 +20,16 @@ var pairs = []WordPair{
 	WordPair{[]rune("paper"), []rune("pipes"), 2},
 	WordPair{[]rune("display"), []rune("yardsale"), 7},
 	WordPair{[]rune("cable"), []rune("stable"), 2},
+	WordPair{[]rune("lecture"), []rune("college"), 6},
+	WordPair{[]rune("bottle"), []rune("throttle"), 3},
+	WordPair{[]rune("desk"), []rune("drawing"), 6},
+	WordPair{[]rune("microwave"), []rune("waffles"), 9},
+	WordPair{[]rune("memory"), []rune("morty"), 3},
+	WordPair{[]rune("flowers"), []rune("wolf"), 6},
+	WordPair{[]rune("carpet"), []rune("caterer"), 4},
+	WordPair{[]rune("soup"), []rune("parsley"), 6},
+	WordPair{[]rune("porridge"), []rune("prestige"), 5},
+	WordPair{[]rune("hickory"), []rune("crabapple"), 9},
 }
 
 func TestMin(t *testing.T) {
@@ -55,7 +63,6 @@ func TestCreateDMatrix(t *testing.T) {
 }
 
 func TestEditDistanceAppleSnapple(t *testing.T) {
-	fmt.Println("\ntesting \"apple\" and \"snapple\"")
 	w := Weights{1, 1, 1}
 	result := EditDistance([]rune("apple"), []rune("snapple"), w)
 	if result != 2 {
@@ -64,7 +71,6 @@ func TestEditDistanceAppleSnapple(t *testing.T) {
 }
 
 func TestEditDistanceClownBrown(t *testing.T) {
-	fmt.Println("\ntesting \"clown\" and \"brown\"")
 	w := Weights{1, 1, 1}
 	result := EditDistance([]rune("clown"), []rune("brown"), w)
 	if result != 2 {
@@ -73,7 +79,6 @@ func TestEditDistanceClownBrown(t *testing.T) {
 }
 
 func TestEditDistanceBookBurn(t *testing.T) {
-	fmt.Println("\ntesting \"book\" and \"burn\"")
 	w := Weights{1, 1, 1}
 	result := EditDistance([]rune("book"), []rune("burn"), w)
 	if result != 3 {
@@ -82,7 +87,6 @@ func TestEditDistanceBookBurn(t *testing.T) {
 }
 
 func TestEditDistanceKittenSitting(t *testing.T) {
-	fmt.Println("\ntesting \"kitten\" and \"sitting\"")
 	w := Weights{1, 1, 1}
 	result := EditDistance([]rune("kitten"), []rune("sitting"), w)
 	if result != 3 {
@@ -97,7 +101,39 @@ func TestBufferedEditDistance(t *testing.T) {
 
 	for _, pair := range pairs {
 		result := BufferedEditDistance(pair.x, pair.y, w, d)
-		fmt.Printf("result  : %d\n\n", result)
-		fmt.Printf("correct : %d\n\n", pair.dist)
+		if result != pair.dist {
+			t.Errorf("\nresult : %d\ncorrect: %d\npair   : %s -- %s", result, pair.dist, string(pair.x), string(pair.y))
+		}
+	}
+}
+
+func BenchmarkUnBufferedDistance(b *testing.B) {
+	w := Weights{1, 1, 1}
+
+	b.ReportAllocs()
+	for n := 0; n < b.N; n++ {
+		for _, pair := range pairs {
+			result := EditDistance(pair.x, pair.y, w)
+			if result != pair.dist {
+
+				b.Errorf("\nresult : %d\ncorrect: %d\npair   : %s -- %s", result, pair.dist, string(pair.x), string(pair.y))
+			}
+		}
+	}
+}
+
+func BenchmarkBufferedDistance(b *testing.B) {
+	buffer := NewDMatrix(10, 10)
+	w := Weights{1, 1, 1}
+
+	b.ReportAllocs()
+	for n := 0; n < b.N; n++ {
+		for _, pair := range pairs {
+			result := BufferedEditDistance(pair.x, pair.y, w, buffer)
+			if result != pair.dist {
+
+				b.Errorf("\nresult : %d\ncorrect: %d\npair   : %s -- %s", result, pair.dist, string(pair.x), string(pair.y))
+			}
+		}
 	}
 }
